@@ -1,0 +1,58 @@
+clear;clc;
+img = imread('C:\Users\LEN\Desktop\image\2.jpg');
+img=imresize(img,[256 256]);
+img = rgb2gray(img);
+figure(10)
+imshow(img)
+timg = img;
+%timg
+r = 3.62;
+x(1) = 0.7;
+row = size(img,1);
+col = size(img,2);
+s = row*col;
+%Creation of Logistic function
+for n=1:s-1
+    x(n+1) = r*x(n)*(1-x(n));
+end
+
+[so,in] = sort(x);
+
+%Start of Confusion
+timg = timg(:);
+for m = 1:size(timg,1)
+    
+    t1 = timg(m);
+    timg(m)=timg(in(m));
+    timg(in(m))=t1;
+    
+end
+%End of confussion
+
+
+%Creation of diffusion key
+
+p=3.628;
+k(1)=0.632;
+for n=1:s-1
+    k(n+1) = cos(p*acos(k(n)));
+end
+k = abs(round(k*255));
+
+ktemp = de2bi(k);
+ktemp = circshift(ktemp,1);
+ktemp = bi2de(ktemp)';
+key = bitxor(k,ktemp);
+
+%Ending creation of diffusion key
+
+
+%Final Encryption Starts
+timg = timg';
+timg = bitxor(uint8(key),uint8(timg));
+size(timg)
+himg = reshape(timg,[row col]);
+figure(1)
+imshow(himg);
+imwrite(mat2gray(himg),'C:\Users\LEN\Desktop\image\myImage.jpeg','JPEG');%himg 
+%Final Encryption Ends

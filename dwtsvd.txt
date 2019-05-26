@@ -1,0 +1,63 @@
+close all;
+clc
+
+
+alpha = 0.75; % embedding strength
+I = imread('C:\Users\LEN\Desktop\image\1.jpg');
+I=rgb2gray(I);
+subplot(2,2,1)
+ imshow(I);title('The image in which we insert watermark');
+[LL1,HL1,LH1,HH1] = dwt2(I,'haar');
+[LL2,HL2,LH2,HH2] = dwt2(LL1,'haar');
+p = size(LL2);
+%applying SVD on LL2
+[Uy,Sy,Vy] = svd(LL2);
+q = size(Sy);
+% watermark
+I_w = imread('C:\Users\LEN\Desktop\image\myImage.jpeg');
+I_w = I_w(:,:,1);
+I1_w = imresize(I_w, p);
+subplot(2,2,2)
+ imshow(I1_w); title('original watermark');
+%applying SVD on watermark
+[Uw,Sw,Vw] = svd(double(I1_w));
+    
+%embed watermark
+Smark = Sy + alpha*Sw;
+LL2_1 = Uy*Smark*Vy';
+%Apply inverse dwt to get watermarked image
+LL1_1 = idwt2(LL2_1,HL2,LH2,HH2,'haar');
+I_1 = idwt2(LL1_1,HL1,LH1,HH1,'haar'); 
+subplot(2,2,3)
+ imshow(uint8(I_1)); title('Watermarked Image');
+ 
+ host=imread('C:\Users\LEN\Desktop\image\1.jpg');
+host=rgb2gray(host);
+im1 = double(host);
+im2 = double(I_1);
+% mean squared error
+mse = sum((im1(:)-im2(:)).^2) / prod(size(im1));
+%the psnr, as peak=255
+psnr = 10*log10(255*255/mse)
+
+
+%EXTRACTION
+[LL1_wmv,HL1_wmv,LH1_wmv,HH1_wmv] = dwt2(I_1,'haar');
+[LL2_wmv,HL2_wmv,LH2_wmv,HH2_wmv] = dwt2(LL1_wmv,'haar');
+[Uy_wmv,Sy_wmv,Vy_wmv] = svd(LL2_wmv);
+Swrec = (Sy_wmv - Sy)/alpha;
+WMy = Uw*Swrec*Vw'; 
+
+subplot(2,2,4)
+imshow(uint8(WMy)); title('Extracted Watermark');
+WMy=imresize(WMy,[256 256]);
+imwrite(mat2gray(WMy),'C:\Users\LEN\Desktop\image\myImage1.jpeg','JPEG');
+
+wat=imread('C:\Users\LEN\Desktop\image\myImage.jpeg');
+[k,j,p]=size(wat);
+
+
+
+WMy=imresize(WMy,[k j]);
+cc = corr2(WMy,wat)
+
